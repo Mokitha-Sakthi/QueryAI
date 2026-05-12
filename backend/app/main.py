@@ -10,11 +10,15 @@ from app.ai.groq_client import generate_query
 
 load_dotenv()
 
-app = FastAPI(title="QueryBridge AI API")
+app = FastAPI(
+    title="QueryAI API",
+    description="AI-powered natural language to SQL & MongoDB query translator",
+    version="1.0.0"
+)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, restrict this
+    allow_origins=["http://localhost:5173", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -25,27 +29,26 @@ class PromptRequest(BaseModel):
 
 @app.get("/api/health")
 def health_check():
-    return {"status": "ok"}
+    return {"status": "ok", "version": "1.0.0"}
 
 @app.get("/api/schema")
 def get_schemas():
-    mysql_schema = get_mysql_schema()
-    mongodb_schema = get_mongodb_schema()
     return {
-        "mysql": mysql_schema,
-        "mongodb": mongodb_schema
+        "mysql": get_mysql_schema(),
+        "mongodb": get_mongodb_schema()
     }
 
 @app.post("/api/generate")
 async def generate(request: PromptRequest):
-    if not request.prompt:
-        raise HTTPException(status_code=400, detail="Prompt is required")
-    
+    if not request.prompt or not request.prompt.strip():
+        raise HTTPException(status_code=400, detail="Prompt cannot be empty")
+
     try:
         mysql_schema = get_mysql_schema()
         mongodb_schema = get_mongodb_schema()
-        
         result = await generate_query(request.prompt, mysql_schema, mongodb_schema)
         return result
-    except Exception as e:
+    except ValueError as e:
         raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Query generation failed: {str(e)}")
