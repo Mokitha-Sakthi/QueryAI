@@ -5,40 +5,52 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-MODEL = "llama3-70b-8192"
+MODEL = "llama-3.3-70b-versatile"
 
-SYSTEM_PROMPT_TEMPLATE = """
-You are an expert database engineer and query optimizer. Your task is to translate natural language prompts into:
-1. An optimized MySQL query
-2. An equivalent MongoDB aggregation pipeline
+MYSQL_SYSTEM_PROMPT = """
+You are an expert MySQL database engineer and query optimizer.
+Your task is to translate a natural language prompt into an optimized MySQL query.
 
-Use the provided schema context carefully to generate accurate, valid queries.
+Use the provided schema context carefully to generate an accurate, valid query.
 
 MySQL Schema:
-{mysql_schema}
-
-MongoDB Schema:
-{mongodb_schema}
+{schema}
 
 You MUST return ONLY a valid JSON object with these exact keys:
-- "sql": The MySQL query string
-- "mongodb": The MongoDB aggregation pipeline as a JSON-serializable string
-- "explanation": A clear explanation of what the queries do and any performance tips
+- "query": The MySQL query string
+- "explanation": A clear explanation of what the query does and any performance tips
 
 Do NOT include markdown code fences or any text outside the JSON object.
 """
 
-async def generate_query(prompt: str, mysql_schema: dict, mongodb_schema: dict) -> dict:
+MONGODB_SYSTEM_PROMPT = """
+You are an expert MongoDB database engineer.
+Your task is to translate a natural language prompt into a MongoDB aggregation pipeline.
+
+Use the provided schema context carefully to generate an accurate, valid pipeline.
+
+MongoDB Schema:
+{schema}
+
+You MUST return ONLY a valid JSON object with these exact keys:
+- "query": The MongoDB aggregation pipeline as a JSON-serializable string (e.g. db.collection.aggregate([...]))
+- "explanation": A clear explanation of what the pipeline does and any performance tips
+
+Do NOT include markdown code fences or any text outside the JSON object.
+"""
+
+
+async def generate_query(prompt: str, schema: dict, db_type: str) -> dict:
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         raise ValueError("GROQ_API_KEY is not set in environment variables.")
 
     client = AsyncGroq(api_key=api_key)
 
-    system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
-        mysql_schema=json.dumps(mysql_schema, indent=2),
-        mongodb_schema=json.dumps(mongodb_schema, indent=2)
-    )
+    if db_type == "mysql":
+        system_prompt = MYSQL_SYSTEM_PROMPT.format(schema=json.dumps(schema, indent=2))
+    else:
+        system_prompt = MONGODB_SYSTEM_PROMPT.format(schema=json.dumps(schema, indent=2))
 
     chat_completion = await client.chat.completions.create(
         messages=[

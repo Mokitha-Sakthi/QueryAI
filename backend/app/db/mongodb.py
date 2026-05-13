@@ -18,15 +18,18 @@ def get_mongodb_connection():
         print(f"Error connecting to MongoDB: {e}")
         return None
 
-def get_mongodb_schema():
+def get_mongodb_schema(database: str = None) -> dict:
+    db_name = database or os.getenv("MONGODB_DATABASE", "queryai_blog")
     client = get_mongodb_connection()
     if not client:
         return {"_error": "Could not connect to MongoDB. Check MONGODB_URI in .env file."}
 
     try:
-        db_name = os.getenv("MONGODB_DATABASE", "test")
         db = client[db_name]
         collections = db.list_collection_names()
+
+        if not collections:
+            return {"_error": f"No collections found in MongoDB database '{db_name}'."}
 
         schema = {}
         for coll_name in collections:
