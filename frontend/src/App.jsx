@@ -4,14 +4,14 @@ import axios from 'axios';
 import SchemaViewer from './components/SchemaViewer';
 import './App.css';
 
-const API_BASE = 'http://localhost:8001';
+const API_BASE = 'http://localhost:8000';
 
 // All available databases (one selector, pick one)
 const DB_OPTIONS = {
-  queryai_shop: { type: 'mysql',   label: 'Shop (E-commerce)',  icon: '🐬', detail: 'customers · products · orders' },
-  queryai_hr:   { type: 'mysql',   label: 'HR System',          icon: '🐬', detail: 'departments · employees · leave_requests' },
-  queryai_blog: { type: 'mongodb', label: 'Blog Platform',      icon: '🍃', detail: 'users · posts · comments' },
-  queryai_iot:  { type: 'mongodb', label: 'IoT Sensors',        icon: '🍃', detail: 'devices · readings · alerts' },
+  queryai_shop: { type: 'mysql', label: 'Shop (E-commerce)', icon: '🐬', detail: 'customers · products · orders' },
+  queryai_hr: { type: 'mysql', label: 'HR System', icon: '🐬', detail: 'departments · employees · leave_requests' },
+  queryai_blog: { type: 'mongodb', label: 'Blog Platform', icon: '🍃', detail: 'users · posts · comments' },
+  queryai_iot: { type: 'mongodb', label: 'IoT Sensors', icon: '🍃', detail: 'devices · readings · alerts' },
 };
 
 // Example prompts per database
@@ -47,15 +47,15 @@ const EXAMPLE_PROMPTS = {
 };
 
 function App() {
-  const [selectedDb, setSelectedDb]   = useState('queryai_shop');
-  const [prompt, setPrompt]           = useState('');
-  const [loading, setLoading]         = useState(false);
-  const [results, setResults]         = useState(null);
-  const [error, setError]             = useState(null);
-  const [schema, setSchema]           = useState(null);
+  const [selectedDb, setSelectedDb] = useState('queryai_shop');
+  const [prompt, setPrompt] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState(null);
+  const [error, setError] = useState(null);
+  const [schema, setSchema] = useState(null);
   const [schemaLoading, setSchemaLoading] = useState(false);
-  const [schemaError, setSchemaError]     = useState(null);
-  const [showSchema, setShowSchema]       = useState(false);
+  const [schemaError, setSchemaError] = useState(null);
+  const [showSchema, setShowSchema] = useState(false);
 
   const dbInfo = DB_OPTIONS[selectedDb];
   const dbType = dbInfo.type;
@@ -197,7 +197,7 @@ function App() {
       {showSchema && (
         <section className="schema-section glass-panel">
           {schemaLoading && <p className="schema-loading">Loading schema…</p>}
-          {schemaError  && <p className="schema-error">⚠ {schemaError}</p>}
+          {schemaError && <p className="schema-error">⚠ {schemaError}</p>}
           {schema && !schemaLoading && (
             <SchemaViewer
               schema={schema.schema}
